@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Sense Match Game (1-5)</title>
+    <title>Number Sense Match Game (1, 5, 10, 15, 20)</title>
     <style>
         /* --- CSS STYLING --- */
         body {
@@ -19,7 +19,7 @@
         }
 
         #game-container {
-            max-width: 1000px;
+            max-width: 1200px; /* Increased width to accommodate 5 targets */
             margin: 0 auto;
             padding: 20px;
             background-color: white;
@@ -37,13 +37,13 @@
         }
 
         .match-target {
-            width: 160px;
+            width: 180px; /* Slightly wider targets */
             padding: 10px;
             background-color: #e9ecef;
             border: 3px dashed #6c757d;
             border-radius: 8px;
             text-align: center;
-            min-height: 200px;
+            min-height: 250px;
             transition: background-color 0.3s;
         }
 
@@ -78,16 +78,12 @@
             transition: opacity 0.3s, transform 0.1s;
             font-size: 1.2em;
             font-weight: bold;
-            width: 120px;
-            height: 120px;
+            width: 150px; /* Increased card size to fit two 10-frames */
+            height: 150px;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
-        }
-
-        .draggable-card:active {
-            cursor: grabbing;
         }
 
         .card-word {
@@ -99,19 +95,25 @@
             padding: 5px;
         }
 
-        /* 10-FRAME VISUALIZATION */
+        /* 10-FRAME VISUALIZATION CONTAINER (for 1 or 2 frames) */
+        .ten-frame-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .ten-frame-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 5px;
-            width: 100px;
-            height: 50px;
+            gap: 4px;
+            width: 70px; /* Adjusted size for two frames to fit */
+            height: 35px;
         }
 
         .dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             background-color: #6c757d; /* Empty dot color */
             border-radius: 50%;
             transition: background-color 0.3s;
@@ -132,15 +134,15 @@
             font-size: 0.9em;
         }
         
-        /* Ensure the content inside the match card displays correctly */
         .match-card .draggable-card {
-            cursor: default; /* Disable grab icon inside the target */
+            cursor: default;
             background-color: transparent;
             color: #333;
             box-shadow: none;
             width: auto;
             height: auto;
             padding: 0;
+            font-weight: normal;
         }
         
         .match-card .ten-frame-grid .dot.filled {
@@ -159,20 +161,14 @@
             font-weight: bold;
             color: #007bff;
         }
-
-        /* Utility classes */
-        .hidden {
-            display: none !important;
-        }
         
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <h1>🔢 Number Sense Match (1-5)</h1>
+        <h1>🔢 Number Sense Match (1, 5, 10, 15, 20)</h1>
         <p style="text-align: center;">Drag the **Number Words** and **10-Frames** to their matching **Numeral** box.</p>
-        
 
         <div id="target-area">
             </div>
@@ -186,13 +182,13 @@
     <script>
         // --- JAVASCRIPT LOGIC ---
 
-        // 1. DATA DEFINITION
+        // 1. DATA DEFINITION - Increments of 5 up to 20
         const NUMBERS = [
             { num: 1, word: "One" },
-            { num: 2, word: "Two" },
-            { num: 3, word: "Three" },
-            { num: 4, word: "Four" },
-            { num: 5, word: "Five" }
+            { num: 5, word: "Five" },
+            { num: 10, word: "Ten" },
+            { num: 15, word: "Fifteen" },
+            { num: 20, word: "Twenty" }
         ];
 
         // Global state tracking
@@ -200,15 +196,33 @@
         const totalMatches = NUMBERS.length;
         let cardCounter = 0; // Used to assign unique IDs
 
-        // 2. HELPER FUNCTION: Create a 10-Frame HTML element
+        // 2. HELPER FUNCTION: Create 10-Frame HTML (supports 0-20 using two frames)
         function createTenFrameHTML(number) {
-            let dotsHTML = '';
-            // Generate 10 dots
-            for (let i = 1; i <= 10; i++) {
-                const isFilled = i <= number;
-                dotsHTML += `<span class="dot ${isFilled ? 'filled' : ''}"></span>`;
+            const fullTens = Math.floor(number / 10);
+            const ones = number % 10;
+            let html = '';
+
+            // Helper to generate a single 10-frame
+            function generateSingleFrame(filledCount) {
+                let dotsHTML = '';
+                for (let i = 1; i <= 10; i++) {
+                    const isFilled = i <= filledCount;
+                    dotsHTML += `<span class="dot ${isFilled ? 'filled' : ''}"></span>`;
+                }
+                return `<div class="ten-frame-grid">${dotsHTML}</div>`;
             }
-            return `<div class="ten-frame-grid">${dotsHTML}</div>`;
+            
+            // Add a full 10-frame for every ten (up to 1)
+            for (let i = 0; i < fullTens; i++) {
+                html += generateSingleFrame(10);
+            }
+            
+            // Add the partial frame for the ones
+            if (ones > 0 || fullTens === 0) { // Ensures a frame is shown even for 10/20 (empty ones frame)
+                html += generateSingleFrame(ones);
+            }
+
+            return `<div class="ten-frame-container">${html}</div>`; 
         }
 
         // 3. GAME SETUP
@@ -286,13 +300,11 @@
             e.dataTransfer.setData('data-number', e.target.getAttribute('data-number'));
             e.dataTransfer.setData('data-type', e.target.getAttribute('data-type'));
             e.dataTransfer.setData('card-id', e.target.id); // Pass the ID
-            //e.target.classList.add('dragging'); // Optional styling
         }
 
         // Drag Over: Allow dropping
         function handleDragOver(e) {
-            e.preventDefault(); // Required to allow drop
-            // Find the closest target element, in case the drop is over nested content
+            e.preventDefault(); 
             const target = e.target.closest('.match-target');
             if (target) {
                 target.classList.add('drag-over');
@@ -318,9 +330,8 @@
             const droppedNumber = e.dataTransfer.getData('data-number');
             const targetNumber = target.getAttribute('data-number');
             const droppedType = e.dataTransfer.getData('data-type');
-            const droppedCardId = e.dataTransfer.getData('card-id'); // Retrieve the ID
+            const droppedCardId = e.dataTransfer.getData('card-id'); 
             
-            // Check if this type of match has already been made for this target
             const alreadyMatched = target.querySelector(`[data-matched-type="${droppedType}"]`);
             
             if (droppedNumber === targetNumber && !alreadyMatched) {
@@ -380,7 +391,7 @@
 
         function checkWinCondition() {
             if (matchesFound === totalMatches) {
-                updateFeedback('🎉 CONGRATULATIONS! You matched all the numbers 1-5!');
+                updateFeedback('🎉 CONGRATULATIONS! You matched all the numbers!');
             }
         }
 
