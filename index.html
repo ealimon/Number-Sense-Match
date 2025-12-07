@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Sense Match Game (Staged 1-20)</title>
+    <title>Animal Number Match (Staged 1-20)</title>
     <style>
-        /* --- CORE CSS STYLING (Same as before, plus new modal styles) --- */
+        /* --- CORE CSS STYLING (Themed Colors) --- */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Comic Sans MS', cursive, sans-serif; /* Fun font */
             margin: 0;
-            background-color: #f0f8ff;
+            background-color: #ffe4e1; /* Pale Pink/Rose - Animal/Cute theme background */
             color: #333;
             display: flex;
             justify-content: center;
@@ -19,52 +19,55 @@
         }
 
         h1 {
-            color: #007bff;
+            color: #ff69b4; /* Hot Pink */
             text-align: center;
+            text-shadow: 1px 1px 0 #fff;
         }
 
         #game-container {
             max-width: 1200px;
             width: 100%;
             padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            border-radius: 20px; /* Rounded corners */
+            box-shadow: 0 8px 15px rgba(255, 105, 180, 0.4); /* Pink shadow */
+            border: 5px solid #ffa07a; /* Light Salmon border */
         }
 
-        /* TARGET AREA (Numerals) */
+        /* TARGET AREA (Numerals) - Treehouses/Dens */
         #target-area {
             display: flex;
             justify-content: space-around;
             margin-bottom: 40px;
-            border-bottom: 2px solid #ccc;
+            border-bottom: 2px dashed #ffa07a;
             padding-bottom: 20px;
         }
 
         .match-target {
             width: 180px;
-            padding: 10px;
-            background-color: #e9ecef;
-            border: 3px dashed #6c757d;
-            border-radius: 8px;
+            padding: 15px 10px;
+            background-color: #c8e6c9; /* Pale Green/Grass */
+            border: 4px solid #388e3c; /* Dark Green border */
+            border-radius: 12px;
             text-align: center;
             min-height: 250px;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.1s;
         }
 
         .match-target.drag-over {
-            background-color: #ffc107;
-            border-color: #dc3545;
+            background-color: #fffacd; /* Light Yellow */
+            border-color: #ff69b4;
+            transform: scale(1.02);
         }
 
         .target-numeral {
-            font-size: 2.5em;
+            font-size: 2.8em;
             font-weight: bold;
-            color: #28a745;
+            color: #8b4513; /* Brown (Wood) */
             margin-bottom: 10px;
         }
 
-        /* DRAGGABLE CARDS (Words & 10-Frames) */
+        /* DRAGGABLE CARDS (Animal Prints/Textures) */
         #draggable-area {
             display: flex;
             flex-wrap: wrap;
@@ -77,12 +80,10 @@
         .draggable-card {
             cursor: grab;
             padding: 15px;
-            background-color: #007bff;
-            color: white;
-            border-radius: 6px;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.2);
             transition: opacity 0.3s, transform 0.1s;
-            font-size: 1.2em;
+            font-size: 1.3em;
             font-weight: bold;
             width: 150px;
             height: 150px;
@@ -92,56 +93,63 @@
             user-select: none;
             overflow: hidden; 
         }
-
+        
+        /* Word Cards - Fuzzy Texture */
         .card-word {
-            background-color: #17a2b8;
+            background-color: #f7b731; /* Golden Yellow */
+            color: #333;
+            border: 3px dashed #fff;
         }
 
+        /* 10-Frame Cards - Paw Print/Dot Boxes */
         .card-ten-frame {
-            background-color: #dc3545;
+            background-color: #87cefa; /* Sky Blue */
+            color: #fff;
+            border: 3px solid #4682b4;
             padding: 0; 
             box-sizing: border-box; 
         }
-
-        /* 10-FRAME VISUALIZATION CONTAINER (for 1 or 2 frames) */
+        
+        /* 10-FRAME VISUALIZATION CONTAINER */
         .ten-frame-container {
-            /* --- ADJUSTED FOR FIT --- */
             display: flex;
-            gap: 3px; /* Tighter gap between the two 10-frames */
+            gap: 3px; 
             align-items: center;
             justify-content: center; 
             margin: auto; 
-            padding: 5px 0; /* Reduced vertical padding */
+            padding: 5px 0;
         }
 
         .ten-frame-grid {
-            /* --- ADJUSTED FOR FIT --- */
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 2px; /* Tighter gap between dots in the grid */
-            width: 60px; /* Reduced width */
-            height: 28px; /* Reduced height */
+            gap: 2px;
+            width: 60px;
+            height: 28px;
+            background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent white grid base */
+            border-radius: 3px;
         }
 
+        /* DOTS - Now stylized as 'Paw Prints' or 'Berry Markers' */
         .dot {
-            /* --- ADJUSTED FOR FIT --- */
-            width: 5px; /* Significantly reduced dot size */
-            height: 5px; /* Significantly reduced dot size */
-            background-color: #6c757d; 
+            width: 5px; 
+            height: 5px; 
+            background-color: #ffb6c1; /* Light Pink - Empty Paw/Berry color */
             border-radius: 50%;
             transition: background-color 0.3s;
         }
 
         .dot.filled {
-            background-color: white; 
+            background-color: #8b4513; /* Brown - Filled Paw/Berry color */
+            border: 1px solid #fff;
         }
 
         /* Matched Card Styling */
         .match-card {
-            border: 2px solid #28a745;
-            background-color: #e2f0d9;
-            color: #28a745;
+            border: 2px solid #388e3c; /* Green Border */
+            background-color: #f0fff0; /* Honeydew Green */
+            color: #333;
             margin: 5px 0;
             padding: 5px;
             border-radius: 4px;
@@ -149,24 +157,24 @@
         }
         
         .match-card .draggable-card {
-            cursor: default;
             background-color: transparent;
             color: #333;
             box-shadow: none;
-            width: auto;
-            height: auto;
+            border: none;
             padding: 0;
             font-weight: normal;
-            overflow: visible;
         }
         
+        /* Matched dots should use a vibrant green */
         .match-card .ten-frame-grid .dot.filled {
-            background-color: #28a745; 
+            background-color: #388e3c; 
+            border-color: #fff;
         }
 
         .match-target.complete {
             background-color: #d4edda;
-            border: 3px solid #28a745;
+            border: 5px solid #2e8b57; /* Sea Green - Stronger complete border */
+            animation: pulse 1s infinite alternate;
         }
 
         #feedback {
@@ -174,73 +182,79 @@
             margin-top: 20px;
             font-size: 1.5em;
             font-weight: bold;
-            color: #007bff;
+            color: #ff69b4; /* Pink feedback */
         }
 
-        /* --- CONGRATULATIONS OVERLAY --- */
+        /* --- CONGRATULATIONS OVERLAY (Themed) --- */
         #congrats-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(255, 105, 180, 0.7); /* Pink translucent overlay */
             color: white;
-            display: none; 
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
 
         #congrats-box {
-            background: linear-gradient(135deg, #ff6b6b, #feca57, #1dd1a1);
-            padding: 50px;
-            border-radius: 15px;
+            background: linear-gradient(135deg, #ffb6c1, #ff69b4, #ff8c00); /* Gradient of pinks and orange */
+            padding: 60px;
+            border-radius: 25px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
             animation: bounce 0.8s ease-out;
+            border: 8px dashed #fff;
         }
 
         #congrats-title {
-            font-size: 4em;
+            font-size: 4.5em;
             margin-bottom: 10px;
-            text-shadow: 3px 3px 0 #333;
+            text-shadow: 4px 4px 0 #8b4513; /* Brown shadow */
         }
 
         #congrats-message {
-            font-size: 1.5em;
+            font-size: 1.8em;
             margin-bottom: 30px;
         }
 
         #next-set-button {
             padding: 15px 30px;
-            font-size: 1.2em;
+            font-size: 1.4em;
             font-weight: bold;
-            background-color: #007bff;
+            background-color: #388e3c; /* Dark Green button */
             color: white;
-            border: none;
-            border-radius: 8px;
+            border: 5px solid #fff;
+            border-radius: 10px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.1s;
         }
 
         #next-set-button:hover {
-            background-color: #0056b3;
+            background-color: #2e8b57;
+            transform: scale(1.05);
         }
 
-        /* Simple Bounce Animation */
+        /* Animations */
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
             40% {transform: translateY(-30px);}
             60% {transform: translateY(-15px);}
+        }
+        @keyframes pulse {
+            0% {box-shadow: 0 0 0 0 rgba(46, 139, 87, 0.7);}
+            100% {box-shadow: 0 0 0 10px rgba(46, 139, 87, 0);}
         }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <h1>🔢 Number Sense Match (Set <span id="current-set-display">1</span> of 4)</h1>
-        <p style="text-align: center;">Drag the **Number Words** and **10-Frames** to their matching **Numeral** box.</p>
+        <h1>🐻 Animal Den Number Match (Set <span id="current-set-display">1</span> of 4) 🦋</h1>
+        <p style="text-align: center; font-size: 1.1em;">Match the **Number Words** and **Paw Prints** to the right **Animal Den**.</p>
 
         <div id="target-area">
             </div>
@@ -254,14 +268,14 @@
     <div id="congrats-overlay">
         <div id="congrats-box">
             <div id="confetti-effect"></div>
-            <div id="congrats-title">🎉 Congratulations! 🎉</div>
+            <div id="congrats-title">🎉 Wild Success! 🎉</div>
             <div id="congrats-message">You completed Set <span id="completed-set-number">1</span>! Ready for the next challenge?</div>
             <button id="next-set-button">Start Set <span id="next-set-number">2</span></button>
         </div>
     </div>
 
     <script>
-        // --- JAVASCRIPT LOGIC ---
+        // --- JAVASCRIPT LOGIC (Unchanged functionality) ---
 
         // 1. DATA DEFINITION - 4 Sets of 5 numbers (1-5, 6-10, 11-15, 16-20)
         const ALL_NUMBERS = [
@@ -276,7 +290,7 @@
         ];
 
         // Global State
-        let currentSetIndex = 0; // Starts at 0 (Set 1)
+        let currentSetIndex = 0; 
         let matchesFoundInSet = 0;
         let cardCounter = 0; 
         const totalSets = ALL_NUMBERS.length;
@@ -313,7 +327,6 @@
                 html += generateSingleFrame(ones);
             }
 
-            // For numbers 10 and 20, ensure both frames show if needed for context
             if (number > 10 && ones === 0) {
                  html += generateSingleFrame(0);
             }
@@ -336,7 +349,6 @@
         // 3. GAME SETUP
         function setupGame(setIndex) {
             const currentSetData = ALL_NUMBERS[setIndex];
-            const totalMatchesNeeded = currentSetData.length * 2; // 5 numbers * 2 cards each
             matchesFoundInSet = 0;
 
             // Clear previous elements
@@ -387,7 +399,7 @@
         }
 
 
-        // 4. DRAG AND DROP HANDLERS (Simplified for brevity, keeping only essential functions)
+        // 4. DRAG AND DROP HANDLERS (Same as before)
 
         function handleDragStart(e) {
             e.dataTransfer.setData('text/plain', e.target.outerHTML);
@@ -457,20 +469,20 @@
                 if (matchesNeeded === 0) {
                     target.classList.add('complete');
                     matchesFoundInSet++;
-                    updateFeedback(`🥳 Completed ${targetNumber}!`);
+                    updateFeedback(`🥳 Completed ${targetNumber}! Give yourself a pat on the back!`);
                     checkSetCompletion();
                 } else {
-                    updateFeedback(`✅ Matched the ${droppedType} for ${targetNumber}!`);
+                    updateFeedback(`✅ Matched the ${droppedType} for ${targetNumber}! Keep going!`);
                 }
 
             } else if (alreadyMatched) {
                 updateFeedback(`⚠️ The ${droppedType} for this number is already matched! Try another.`);
             } else {
-                updateFeedback('❌ Incorrect match. Try again!');
+                updateFeedback('❌ Incorrect match. Oops! Try a different den.');
             }
         }
 
-        // 5. GAME FLOW AND FEEDBACK
+        // 5. GAME FLOW AND FEEDBACK (Same as before, updated messages)
 
         function updateFeedback(message) {
             const feedbackElement = document.getElementById('feedback');
@@ -478,26 +490,22 @@
         }
 
         function checkSetCompletion() {
-            // Check if all 5 numbers in the current set have 2 matches (10 matches total)
             const requiredMatches = ALL_NUMBERS[currentSetIndex].length;
             
             if (matchesFoundInSet === requiredMatches) {
                 
-                // Set is finished! Show the Congratulations screen.
                 completedSetNumber.textContent = currentSetIndex + 1;
                 
                 if (currentSetIndex < totalSets - 1) {
-                    // Not the final set
                     nextSetButton.style.display = 'block';
                     nextSetNumber.textContent = currentSetIndex + 2;
                     congratsOverlay.style.display = 'flex';
-                    document.getElementById('congrats-message').textContent = `You completed Set ${currentSetIndex + 1}! Ready for the next challenge?`;
+                    document.getElementById('congrats-message').textContent = `You guided all the little creatures home in Set ${currentSetIndex + 1}! Ready for the next set?`;
                 } else {
-                    // Final set completed
                     nextSetButton.style.display = 'none';
                     congratsOverlay.style.display = 'flex';
-                    document.getElementById('congrats-title').textContent = '🏆 Game Complete! 🏆';
-                    document.getElementById('congrats-message').textContent = 'You mastered numbers 1 through 20!';
+                    document.getElementById('congrats-title').textContent = '🌟 MASTER OF THE WILD! 🌟';
+                    document.getElementById('congrats-message').textContent = 'You successfully mastered numbers 1 through 20! Great job!';
                 }
             }
         }
@@ -508,10 +516,8 @@
                 congratsOverlay.style.display = 'none';
                 setupGame(currentSetIndex);
             }
-            // The final game complete screen is handled within checkSetCompletion
         }
         
-        // Listeners for the game flow buttons
         nextSetButton.addEventListener('click', moveToNextSet);
 
         // Start the game!
