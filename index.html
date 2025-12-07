@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animal Number Match (Staged 1-20)</title>
+    <title>Animal Number Match (1-10 Focus)</title>
     <style>
         /* --- CORE CSS STYLING (Themed Colors) --- */
         body {
@@ -253,7 +253,7 @@
 <body>
 
     <div id="game-container">
-        <h1>🐻 Animal Den Number Match (Set <span id="current-set-display">1</span> of 4) 🦋</h1>
+        <h1>🐻 Animal Den Number Match (Numbers 1-10 Focus) 🦋</h1>
         <p style="text-align: center; font-size: 1.1em;">Match the **Number Words** and **Paw Prints** to the right **Animal Den**.</p>
 
         <div id="target-area">
@@ -269,24 +269,33 @@
         <div id="congrats-box">
             <div id="confetti-effect"></div>
             <div id="congrats-title">🎉 Wild Success! 🎉</div>
-            <div id="congrats-message">You completed Set <span id="completed-set-number">1</span>! Ready for the next challenge?</div>
+            <div id="congrats-message">You completed Set <span id="completed-set-number">1</span>! Ready for the next set?</div>
             <button id="next-set-button">Start Set <span id="next-set-number">2</span></button>
         </div>
     </div>
 
     <script>
-        // --- JAVASCRIPT LOGIC (Unchanged functionality) ---
+        // --- JAVASCRIPT LOGIC ---
+        
+        // **TTS FUNCTIONALITY ADDED**
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                // Stop any current speech to avoid overlapping
+                window.speechSynthesis.cancel(); 
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8; // Speak slightly slower for kindergarteners
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
 
-        // 1. DATA DEFINITION - 4 Sets of 5 numbers (1-5, 6-10, 11-15, 16-20)
+        // 1. DATA DEFINITION - **LIMITED TO SETS 1 & 2 (NUMBERS 1-10)**
         const ALL_NUMBERS = [
             // Set 1: 1-5
             [{ num: 1, word: "One" }, { num: 2, word: "Two" }, { num: 3, word: "Three" }, { num: 4, word: "Four" }, { num: 5, word: "Five" }],
             // Set 2: 6-10
             [{ num: 6, word: "Six" }, { num: 7, word: "Seven" }, { num: 8, word: "Eight" }, { num: 9, word: "Nine" }, { num: 10, word: "Ten" }],
-            // Set 3: 11-15
-            [{ num: 11, word: "Eleven" }, { num: 12, word: "Twelve" }, { num: 13, word: "Thirteen" }, { num: 14, word: "Fourteen" }, { num: 15, word: "Fifteen" }],
-            // Set 4: 16-20
-            [{ num: 16, word: "Sixteen" }, { num: 17, word: "Seventeen" }, { num: 18, word: "Eighteen" }, { num: 19, word: "Nineteen" }, { num: 20, word: "Twenty" }]
+            // Set 3 and 4 removed for K-focus. To re-enable, paste them back here.
         ];
 
         // Global State
@@ -323,17 +332,16 @@
                 html += generateSingleFrame(10);
             }
             
-            if (ones > 0 || fullTens === 0) { 
+            if (ones > 0) { 
                 html += generateSingleFrame(ones);
             }
-
-            if (number > 10 && ones === 0) {
-                 html += generateSingleFrame(0);
-            }
+            
+            // Fix for multiples of 10 (like 10 or 20) to ensure the second frame appears correctly.
             if (number === 10) {
-                 html += generateSingleFrame(0);
+                // number 10 means one full frame (from loop) and one empty frame
+                html += generateSingleFrame(0);
             }
-
+            // For 20, the loop runs twice (fullTens=2), so it's correct.
 
             return `<div class="ten-frame-container">${html}</div>`; 
         }
@@ -393,13 +401,16 @@
                 card.innerHTML = item.html;
 
                 card.addEventListener('dragstart', handleDragStart);
+                
+                // **TTS: SPEAK NUMBER ON HOVER**
+                card.addEventListener('mouseenter', () => speak(item.num.toString()));
 
                 draggableArea.appendChild(card);
             });
         }
 
 
-        // 4. DRAG AND DROP HANDLERS (Same as before)
+        // 4. DRAG AND DROP HANDLERS
 
         function handleDragStart(e) {
             e.dataTransfer.setData('text/plain', e.target.outerHTML);
@@ -448,6 +459,8 @@
                 matchDisplay.className = 'match-card';
                 matchDisplay.setAttribute('data-matched-type', droppedType);
                 
+                const cardContent = droppedCard.textContent.trim(); // Get the word/number for speech
+                
                 droppedCard.removeAttribute('draggable');
                 droppedCard.removeAttribute('id');
                 droppedCard.className = droppedCard.className.replace('draggable-card', '').trim();
@@ -469,20 +482,24 @@
                 if (matchesNeeded === 0) {
                     target.classList.add('complete');
                     matchesFoundInSet++;
-                    updateFeedback(`🥳 Completed ${targetNumber}! Give yourself a pat on the back!`);
+                    updateFeedback(`🥳 Completed ${targetNumber}! All creatures are home!`);
+                    speak(`${targetNumber}. All matched!`); // Speak the numeral 
                     checkSetCompletion();
                 } else {
                     updateFeedback(`✅ Matched the ${droppedType} for ${targetNumber}! Keep going!`);
+                    speak(`${targetNumber}. Found the ${droppedType}!`); // Speak the numeral and card type
                 }
 
             } else if (alreadyMatched) {
                 updateFeedback(`⚠️ The ${droppedType} for this number is already matched! Try another.`);
+                speak("Already matched! Try the other card.");
             } else {
                 updateFeedback('❌ Incorrect match. Oops! Try a different den.');
+                speak("Incorrect. Try again.");
             }
         }
 
-        // 5. GAME FLOW AND FEEDBACK (Same as before, updated messages)
+        // 5. GAME FLOW AND FEEDBACK
 
         function updateFeedback(message) {
             const feedbackElement = document.getElementById('feedback');
@@ -497,15 +514,19 @@
                 completedSetNumber.textContent = currentSetIndex + 1;
                 
                 if (currentSetIndex < totalSets - 1) {
+                    // Not the final set (Set 1 complete, moving to Set 2)
                     nextSetButton.style.display = 'block';
                     nextSetNumber.textContent = currentSetIndex + 2;
                     congratsOverlay.style.display = 'flex';
                     document.getElementById('congrats-message').textContent = `You guided all the little creatures home in Set ${currentSetIndex + 1}! Ready for the next set?`;
+                    speak(`Great job! Set ${currentSetIndex + 1} complete. Ready for set ${currentSetIndex + 2}?`);
                 } else {
+                    // Final set (Set 2 complete)
                     nextSetButton.style.display = 'none';
                     congratsOverlay.style.display = 'flex';
-                    document.getElementById('congrats-title').textContent = '🌟 MASTER OF THE WILD! 🌟';
-                    document.getElementById('congrats-message').textContent = 'You successfully mastered numbers 1 through 20! Great job!';
+                    document.getElementById('congrats-title').textContent = '🌟 MASTER OF NUMBERS 1 TO 10! 🌟';
+                    document.getElementById('congrats-message').textContent = 'You successfully mastered numbers 1 through 10! Great job!';
+                    speak("Congratulations! You mastered numbers 1 to 10!");
                 }
             }
         }
