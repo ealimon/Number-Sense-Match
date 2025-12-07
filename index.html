@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Sense Match Game (1-5)</title>
+    <style>
+        /* --- CSS STYLING --- */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+        }
+
+        #game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* TARGET AREA (Numerals) */
+        #target-area {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 20px;
+        }
+
+        .match-target {
+            width: 160px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border: 3px dashed #6c757d;
+            border-radius: 8px;
+            text-align: center;
+            min-height: 200px;
+            transition: background-color 0.3s;
+        }
+
+        .match-target.drag-over {
+            background-color: #ffc107;
+            border-color: #dc3545;
+        }
+
+        .target-numeral {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+
+        /* DRAGGABLE CARDS (Words & 10-Frames) */
+        #draggable-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px 0;
+        }
+
+        .draggable-card {
+            cursor: grab;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 6px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s, transform 0.1s;
+            font-size: 1.2em;
+            font-weight: bold;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .draggable-card:active {
+            cursor: grabbing;
+        }
+
+        .card-word {
+            background-color: #17a2b8;
+        }
+
+        .card-ten-frame {
+            background-color: #dc3545;
+            padding: 5px;
+        }
+
+        /* 10-FRAME VISUALIZATION */
+        .ten-frame-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 5px;
+            width: 100px;
+            height: 50px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #6c757d; /* Empty dot color */
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .dot.filled {
+            background-color: white; /* Filled dot color */
+        }
+
+        /* FEEDBACK AND COMPLETED MATCHES */
+        .match-card {
+            border: 2px solid #28a745;
+            background-color: #e2f0d9;
+            color: #28a745;
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .match-target.complete {
+            background-color: #d4edda;
+            border: 3px solid #28a745;
+        }
+
+        #feedback {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <h1>🔢 Number Sense Match (1-5)</h1>
+        <p style="text-align: center;">Drag the **Number Words** and **10-Frames** to their matching **Numeral** box.</p>
+
+        <div id="target-area">
+            </div>
+
+        <div id="draggable-area">
+            </div>
+        
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+
+        // 1. DATA DEFINITION
+        const NUMBERS = [
+            { num: 1, word: "One" },
+            { num: 2, word: "Two" },
+            { num: 3, word: "Three" },
+            { num: 4, word: "Four" },
+            { num: 5, word: "Five" }
+        ];
+
+        // Global state tracking
+        let matchesFound = 0;
+        const totalMatches = NUMBERS.length;
+
+        // 2. HELPER FUNCTION: Create a 10-Frame HTML element
+        function createTenFrameHTML(number) {
+            let dotsHTML = '';
+            // Generate 10 dots (5 on top row, 5 on bottom row)
+            for (let i = 1; i <= 10; i++) {
+                const isFilled = i <= number;
+                dotsHTML += `<span class="dot ${isFilled ? 'filled' : ''}"></span>`;
+            }
+            return `<div class="ten-frame-grid">${dotsHTML}</div>`;
+        }
+
+        // 3. GAME SETUP
+        function setupGame() {
+            const targetArea = document.getElementById('target-area');
+            const draggableArea = document.getElementById('draggable-area');
+            const allDraggables = [];
+
+            // A. Create TARGETS (Numerals)
+            NUMBERS.forEach(data => {
+                const target = document.createElement('div');
+                target.className = 'match-target';
+                target.setAttribute('data-number', data.num);
+                target.setAttribute('data-matches-needed', 2); // Need 2 matches: word and 10-frame
+                target.innerHTML = `<div class="target-numeral">${data.num}</div>`;
+
+                // Add Drag/Drop Listeners to the TARGET
+                target.addEventListener('dragover', handleDragOver);
+                target.addEventListener('dragleave', handleDragLeave);
+                target.addEventListener('drop', handleDrop);
+
+                targetArea.appendChild(target);
+
+                // B. Prepare DRAGGABLES (Words and 10-Frames)
+                // Number Word Card
+                allDraggables.push({
+                    type: 'word',
+                    num: data.num,
+                    html: data.word,
+                    class: 'card-word'
+                });
+
+                // 10-Frame Card
+                allDraggables.push({
+                    type: 'ten-frame',
+                    num: data.num,
+                    html: createTenFrameHTML(data.num),
+                    class: 'card-ten-frame'
+                });
+            });
+
+            // C. Shuffle and Render Draggables
+            shuffleArray(allDraggables);
+            
+            allDraggables.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `draggable-card ${item.class}`;
+                card.setAttribute('data-number', item.num);
+                card.setAttribute('data-type', item.type);
+                card.setAttribute('draggable', true);
+                card.innerHTML = item.html;
+
+                // Add Drag Listener to the CARD
+                card.addEventListener('dragstart', handleDragStart);
+
+                draggableArea.appendChild(card);
+            });
+        }
+
+        // Simple Fisher-Yates shuffle algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 4. DRAG AND DROP HANDLERS
+
+        // Drag Start: Set the data being dragged
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.outerHTML);
+            e.dataTransfer.setData('data-number', e.target.getAttribute('data-number'));
+            e.dataTransfer.setData('data-type', e.target.getAttribute('data-type'));
+            e.target.classList.add('dragging');
+        }
+
+        // Drag Over: Allow dropping
+        function handleDragOver(e) {
+            e.preventDefault(); // Required to allow drop
+            if (e.target.classList.contains('match-target')) {
+                e.target.classList.add('drag-over');
+            }
+        }
+
+        // Drag Leave: Remove hover style
+        function handleDragLeave(e) {
+            if (e.target.classList.contains('match-target')) {
+                e.target.classList.remove('drag-over');
+            }
+        }
+
+        // Drop: Check for a match and update the board
+        function handleDrop(e) {
+            e.preventDefault();
+            const target = e.target.closest('.match-target');
+            if (!target) return;
+
+            target.classList.remove('drag-over');
+            
+            const droppedNumber = e.dataTransfer.getData('data-number');
+            const targetNumber = target.getAttribute('data-number');
+            const droppedType = e.dataTransfer.getData('data-type');
+            
+            // Check if this type of match has already been made for this target
+            const alreadyMatched = target.querySelector(`[data-matched-type="${droppedType}"]`);
+            
+            if (droppedNumber === targetNumber && !alreadyMatched) {
+                // SUCCESSFUL MATCH
+                const cardHTML = e.dataTransfer.getData('text/plain');
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = cardHTML;
+                const droppedCard = tempDiv.firstChild;
+                
+                // Create the display element for the matched card
+                const matchDisplay = document.createElement('div');
+                matchDisplay.className = 'match-card';
+                matchDisplay.setAttribute('data-matched-type', droppedType);
+                matchDisplay.appendChild(droppedCard.cloneNode(true));
+                
+                target.appendChild(matchDisplay);
+
+                // Remove the original draggable card from the board
+                const originalDraggable = document.querySelector(`.draggable-card[data-number="${droppedNumber}"][data-type="${droppedType}"]`);
+                if (originalDraggable) {
+                    originalDraggable.classList.add('hidden');
+                }
+
+                // Update matches needed count
+                let matchesNeeded = parseInt(target.getAttribute('data-matches-needed'));
+                matchesNeeded--;
+                target.setAttribute('data-matches-needed', matchesNeeded);
+
+                if (matchesNeeded === 0) {
+                    // ALL MATCHES COMPLETE for this number!
+                    target.classList.add('complete');
+                    matchesFound++;
+                    updateFeedback(`🥳 You completed the number ${targetNumber}!`);
+                    checkWinCondition();
+                } else {
+                    updateFeedback(`✅ Matched the ${droppedType} for ${targetNumber}!`);
+                }
+
+            } else if (alreadyMatched) {
+                updateFeedback(`⚠️ The ${droppedType} for this number is already matched! Try another.`);
+            } else {
+                // FAILED MATCH
+                updateFeedback('❌ Incorrect match. Try again!');
+            }
+        }
+
+        // 5. GAME FEEDBACK & WIN CONDITION
+        function updateFeedback(message) {
+            const feedbackElement = document.getElementById('feedback');
+            feedbackElement.textContent = message;
+        }
+
+        function checkWinCondition() {
+            if (matchesFound === totalMatches) {
+                updateFeedback('🎉 CONGRATULATIONS! You matched all the numbers 1-5!');
+            }
+        }
+
+        // Start the game!
+        document.addEventListener('DOMContentLoaded', setupGame);
+    </script>
+
+</body>
+</html>
