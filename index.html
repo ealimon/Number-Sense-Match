@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animal Number Match (1-10 Focus)</title>
     <style>
-        /* --- CORE CSS STYLING (Themed Colors) --- */
         body {
-            font-family: 'Comic Sans MS', cursive, sans-serif; /* Fun font */
+            font-family: 'Comic Sans MS', cursive, sans-serif;
             margin: 0;
-            background-color: #ffe4e1; /* Pale Pink/Rose - Animal/Cute theme background */
+            background-color: #ffe4e1;
             color: #333;
             display: flex;
             justify-content: center;
@@ -19,9 +18,8 @@
         }
 
         h1 {
-            color: #ff69b4; /* Hot Pink */
+            color: #ff69b4;
             text-align: center;
-            text-shadow: 1px 1px 0 #fff;
         }
 
         #game-container {
@@ -29,12 +27,11 @@
             width: 100%;
             padding: 20px;
             background-color: #ffffff;
-            border-radius: 20px; /* Rounded corners */
-            box-shadow: 0 8px 15px rgba(255, 105, 180, 0.4); /* Pink shadow */
-            border: 5px solid #ffa07a; /* Light Salmon border */
+            border-radius: 20px;
+            box-shadow: 0 8px 15px rgba(255, 105, 180, 0.4);
+            border: 5px solid #ffa07a;
         }
 
-        /* TARGET AREA (Numerals) - Treehouses/Dens */
         #target-area {
             display: flex;
             justify-content: space-around;
@@ -46,28 +43,24 @@
         .match-target {
             width: 180px;
             padding: 15px 10px;
-            background-color: #c8e6c9; /* Pale Green/Grass */
-            border: 4px solid #388e3c; /* Dark Green border */
+            background-color: #c8e6c9;
+            border: 4px solid #388e3c;
             border-radius: 12px;
             text-align: center;
             min-height: 250px;
-            transition: background-color 0.3s, transform 0.1s;
         }
 
         .match-target.drag-over {
-            background-color: #fffacd; /* Light Yellow */
-            border-color: #ff69b4;
-            transform: scale(1.02);
+            background-color: #fffacd;
         }
 
         .target-numeral {
             font-size: 2.8em;
             font-weight: bold;
-            color: #8b4513; /* Brown (Wood) */
+            color: #8b4513;
             margin-bottom: 10px;
         }
 
-        /* DRAGGABLE CARDS (Animal Prints/Textures) */
         #draggable-area {
             display: flex;
             flex-wrap: wrap;
@@ -79,10 +72,9 @@
 
         .draggable-card {
             cursor: grab;
-            padding: 15px;
+            padding: 10px;
             border-radius: 10px;
             box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.2);
-            transition: opacity 0.3s, transform 0.1s;
             font-size: 1.3em;
             font-weight: bold;
             width: 150px;
@@ -90,111 +82,78 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            user-select: none;
-            overflow: hidden; 
+            overflow: hidden; /* This stops dots from going outside */
         }
         
-        /* Word Cards - Fuzzy Texture */
         .card-word {
-            background-color: #f7b731; /* Golden Yellow */
+            background-color: #f7b731;
             color: #333;
             border: 3px dashed #fff;
         }
 
-        /* 10-Frame Cards - Paw Print/Dot Boxes */
         .card-ten-frame {
-            background-color: #87cefa; /* Sky Blue */
-            color: #fff;
+            background-color: #87cefa;
             border: 3px solid #4682b4;
-            padding: 0; 
-            box-sizing: border-box; 
         }
         
-        /* 10-FRAME VISUALIZATION CONTAINER */
+        /* 10-FRAME STYLING */
         .ten-frame-container {
             display: flex;
-            gap: 5px; /* Slightly wider gap for larger dots */
+            flex-direction: column;
+            gap: 5px;
             align-items: center;
             justify-content: center; 
-            margin: auto; 
-            padding: 5px 0;
         }
 
         .ten-frame-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 4px; /* Increased gap within the grid */
-            width: 75px; /* Increased width to accommodate larger dots */
-            height: 35px; /* Increased height */
-            background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent white grid base */
-            border-radius: 3px;
+            gap: 6px;
+            /* Explicitly sized to keep dots inside the blue card */
+            width: 110px; 
+            height: 45px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 5px;
         }
 
-        /* DOTS - Now stylized as 'Paw Prints' or 'Berry Markers' */
         .dot {
-            /* *** LARGER DOT SIZE *** */
-            width: 7px; 
-            height: 7px; 
-            background-color: #ffb6c1; /* Light Pink - Empty Paw/Berry color */
+            width: 12px; 
+            height: 12px; 
+            background-color: #ffb6c1;
             border-radius: 50%;
-            transition: background-color 0.3s;
         }
 
         .dot.filled {
-            background-color: #8b4513; /* Brown - Filled Paw/Berry color */
+            background-color: #8b4513;
             border: 1px solid #fff;
         }
 
-        /* Matched Card Styling */
         .match-card {
-            border: 2px solid #388e3c; /* Green Border */
-            background-color: #f0fff0; /* Honeydew Green */
-            color: #333;
-            margin: 5px 0;
+            border: 2px solid #388e3c;
+            background-color: #f0fff0;
             padding: 5px;
             border-radius: 4px;
-            font-size: 0.9em;
+            margin: 5px 0;
         }
         
         .match-card .draggable-card {
             background-color: transparent;
-            color: #333;
+            width: auto;
+            height: auto;
             box-shadow: none;
             border: none;
-            padding: 0;
-            font-weight: normal;
-        }
-        
-        /* Matched dots should use a vibrant green */
-        .match-card .ten-frame-grid .dot.filled {
-            background-color: #388e3c; 
-            border-color: #fff;
         }
 
-        .match-target.complete {
-            background-color: #d4edda;
-            border: 5px solid #2e8b57; /* Sea Green - Stronger complete border */
-            animation: pulse 1s infinite alternate;
-        }
-
-        #feedback {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #ff69b4; /* Pink feedback */
-        }
-
-        /* --- CONGRATULATIONS OVERLAY --- */
+        /* --- OVERLAYS --- */
         #congrats-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 105, 180, 0.7); /* Pink translucent overlay */
-            color: white;
+            background-color: rgba(255, 105, 180, 0.7);
             display: none;
             justify-content: center;
             align-items: center;
@@ -202,139 +161,60 @@
         }
 
         #congrats-box {
-            background: linear-gradient(135deg, #ffb6c1, #ff69b4, #ff8c00); /* Gradient of pinks and orange */
+            background: linear-gradient(135deg, #ffb6c1, #ff69b4, #ff8c00);
             padding: 60px;
             border-radius: 25px;
             text-align: center;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
-            animation: bounce 0.8s ease-out;
             border: 8px dashed #fff;
-        }
-
-        #congrats-title {
-            font-size: 4.5em;
-            margin-bottom: 10px;
-            text-shadow: 4px 4px 0 #8b4513; /* Brown shadow */
-        }
-
-        #congrats-message {
-            font-size: 1.8em;
-            margin-bottom: 30px;
         }
 
         #next-set-button {
             padding: 15px 30px;
             font-size: 1.4em;
-            font-weight: bold;
-            background-color: #388e3c; /* Dark Green button */
+            background-color: #388e3c;
             color: white;
             border: 5px solid #fff;
             border-radius: 10px;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
-        }
-
-        #next-set-button:hover {
-            background-color: #2e8b57;
-            transform: scale(1.05);
-        }
-
-        /* Animations */
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-30px);}
-            60% {transform: translateY(-15px);}
-        }
-        @keyframes pulse {
-            0% {box-shadow: 0 0 0 0 rgba(46, 139, 87, 0.7);}
-            100% {box-shadow: 0 0 0 10px rgba(46, 139, 87, 0);}
         }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <h1>🐻 Animal Den Number Match (Numbers 1-10 Focus) 🦋</h1>
-        <p style="text-align: center; font-size: 1.1em;">Match the **Number Words** and **Paw Prints** to the right **Animal Den**.</p>
-
-        <div id="target-area">
-            </div>
-
-        <div id="draggable-area">
-            </div>
-        
+        <h1>🐻 Animal Den Number Match (Numbers 1-10) 🦋</h1>
+        <div id="target-area"></div>
+        <div id="draggable-area"></div>
         <div id="feedback"></div>
     </div>
 
     <div id="congrats-overlay">
         <div id="congrats-box">
-            <div id="confetti-effect"></div>
-            <div id="congrats-title">🎉 Wild Success! 🎉</div>
-            <div id="congrats-message">You completed Set <span id="completed-set-number">1</span>! Ready for the next set?</div>
-            <button id="next-set-button">Start Set <span id="next-set-number">2</span></button>
+            <h2 id="congrats-title">🎉 Wild Success! 🎉</h2>
+            <p id="congrats-message">Next set ready?</p>
+            <button id="next-set-button">Start Next Set</button>
         </div>
     </div>
 
     <script>
-        // --- JAVASCRIPT LOGIC ---
-        
-        // **TTS FUNCTION REMOVED**
-
-        // 1. DATA DEFINITION - **LIMITED TO SETS 1 & 2 (NUMBERS 1-10)**
         const ALL_NUMBERS = [
-            // Set 1: 1-5
             [{ num: 1, word: "One" }, { num: 2, word: "Two" }, { num: 3, word: "Three" }, { num: 4, word: "Four" }, { num: 5, word: "Five" }],
-            // Set 2: 6-10
-            [{ num: 6, word: "Six" }, { num: 7, word: "Seven" }, { num: 8, word: "Eight" }, { num: 9, word: "Nine" }, { num: 10, word: "Ten" }],
+            [{ num: 6, word: "Six" }, { num: 7, word: "Seven" }, { num: 8, word: "Eight" }, { num: 9, word: "Nine" }, { num: 10, word: "Ten" }]
         ];
 
-        // Global State
         let currentSetIndex = 0; 
         let matchesFoundInSet = 0;
         let cardCounter = 0; 
-        const totalSets = ALL_NUMBERS.length;
         
-        const targetArea = document.getElementById('target-area');
-        const draggableArea = document.getElementById('draggable-area');
-        const congratsOverlay = document.getElementById('congrats-overlay');
-        const nextSetButton = document.getElementById('next-set-button');
-        const currentSetDisplay = document.getElementById('current-set-display');
-        const completedSetNumber = document.getElementById('completed-set-number');
-        const nextSetNumber = document.getElementById('next-set-number');
-
-
-        // 2. HELPER FUNCTION: Create 10-Frame HTML (supports 0-10)
         function createTenFrameHTML(number) {
-            const fullTens = Math.floor(number / 10);
-            const ones = number % 10;
-            let html = '';
-
-            function generateSingleFrame(filledCount) {
-                let dotsHTML = '';
-                for (let i = 1; i <= 10; i++) {
-                    const isFilled = i <= filledCount;
-                    dotsHTML += `<span class="dot ${isFilled ? 'filled' : ''}"></span>`;
-                }
-                return `<div class="ten-frame-grid">${dotsHTML}</div>`;
+            let dotsHTML = '';
+            for (let i = 1; i <= 10; i++) {
+                dotsHTML += `<span class="dot ${i <= number ? 'filled' : ''}"></span>`;
             }
-            
-            for (let i = 0; i < fullTens; i++) {
-                html += generateSingleFrame(10);
-            }
-            
-            if (ones > 0) { 
-                html += generateSingleFrame(ones);
-            }
-            
-            // Ensures the second, empty frame shows for 10
-            if (number === 10) {
-                html += generateSingleFrame(0);
-            }
-
-            return `<div class="ten-frame-container">${html}</div>`; 
+            // For 1-10 focus, we only ever need one grid per card
+            return `<div class="ten-frame-container"><div class="ten-frame-grid">${dotsHTML}</div></div>`; 
         }
 
-        // Simple Fisher-Yates shuffle algorithm
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -342,40 +222,30 @@
             }
         }
 
-        // 3. GAME SETUP
         function setupGame(setIndex) {
+            const targetArea = document.getElementById('target-area');
+            const draggableArea = document.getElementById('draggable-area');
             const currentSetData = ALL_NUMBERS[setIndex];
             matchesFoundInSet = 0;
-
-            // Clear previous elements
             targetArea.innerHTML = '';
             draggableArea.innerHTML = '';
-            updateFeedback('');
-            
-            currentSetDisplay.textContent = setIndex + 1; 
 
             const allDraggables = [];
 
-            // A. Create TARGETS (Numerals)
             currentSetData.forEach(data => {
                 const target = document.createElement('div');
                 target.className = 'match-target';
                 target.setAttribute('data-number', data.num);
-                target.setAttribute('data-matches-needed', 2); 
                 target.innerHTML = `<div class="target-numeral">${data.num}</div>`;
-
-                target.addEventListener('dragover', handleDragOver);
-                target.addEventListener('dragleave', handleDragLeave);
+                target.addEventListener('dragover', (e) => { e.preventDefault(); target.classList.add('drag-over'); });
+                target.addEventListener('dragleave', () => target.classList.remove('drag-over'));
                 target.addEventListener('drop', handleDrop);
-
                 targetArea.appendChild(target);
 
-                // B. Prepare DRAGGABLES (Words and 10-Frames)
                 allDraggables.push({ type: 'word', num: data.num, html: data.word, class: 'card-word' });
                 allDraggables.push({ type: 'ten-frame', num: data.num, html: createTenFrameHTML(data.num), class: 'card-ten-frame' });
             });
 
-            // C. Shuffle and Render Draggables
             shuffleArray(allDraggables);
             
             allDraggables.forEach(item => {
@@ -387,142 +257,61 @@
                 card.setAttribute('data-type', item.type);
                 card.setAttribute('draggable', true);
                 card.innerHTML = item.html;
-
-                card.addEventListener('dragstart', handleDragStart);
-                
-                // **TTS Listener removed**
-
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('card-id', card.id);
+                    e.dataTransfer.setData('num', card.dataset.number);
+                    e.dataTransfer.setData('type', card.dataset.type);
+                });
                 draggableArea.appendChild(card);
             });
-        }
-
-
-        // 4. DRAG AND DROP HANDLERS
-
-        function handleDragStart(e) {
-            e.dataTransfer.setData('text/plain', e.target.outerHTML);
-            e.dataTransfer.setData('data-number', e.target.getAttribute('data-number'));
-            e.dataTransfer.setData('data-type', e.target.getAttribute('data-type'));
-            e.dataTransfer.setData('card-id', e.target.id); 
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault(); 
-            const target = e.target.closest('.match-target');
-            if (target) {
-                target.classList.add('drag-over');
-            }
-        }
-
-        function handleDragLeave(e) {
-            const target = e.target.closest('.match-target');
-            if (target) {
-                target.classList.remove('drag-over');
-            }
         }
 
         function handleDrop(e) {
             e.preventDefault();
             const target = e.target.closest('.match-target');
-            if (!target) return;
+            const droppedNum = e.dataTransfer.getData('num');
+            const targetNum = target.dataset.number;
+            const cardId = e.dataTransfer.getData('card-id');
+            const cardType = e.dataTransfer.getData('type');
 
             target.classList.remove('drag-over');
             
-            const droppedNumber = e.dataTransfer.getData('data-number');
-            const targetNumber = target.getAttribute('data-number');
-            const droppedType = e.dataTransfer.getData('data-type');
-            const droppedCardId = e.dataTransfer.getData('card-id'); 
-            
-            const alreadyMatched = target.querySelector(`[data-matched-type="${droppedType}"]`);
-            
-            if (droppedNumber === targetNumber && !alreadyMatched) {
-                // SUCCESSFUL MATCH
-                const cardHTML = e.dataTransfer.getData('text/plain');
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = cardHTML;
-                const droppedCard = tempDiv.firstChild;
-                
-                const matchDisplay = document.createElement('div');
-                matchDisplay.className = 'match-card';
-                matchDisplay.setAttribute('data-matched-type', droppedType);
-                
-                droppedCard.removeAttribute('draggable');
-                droppedCard.removeAttribute('id');
-                droppedCard.className = droppedCard.className.replace('draggable-card', '').trim();
+            if (droppedNum === targetNum) {
+                const matchedCard = document.createElement('div');
+                matchedCard.className = 'match-card';
+                matchedCard.innerHTML = document.getElementById(cardId).innerHTML;
+                target.appendChild(matchedCard);
+                document.getElementById(cardId).remove();
 
-                matchDisplay.appendChild(droppedCard);
-                target.appendChild(matchDisplay);
-
-                // REMOVE THE ORIGINAL DRAGGABLE CARD
-                const originalDraggable = document.getElementById(droppedCardId);
-                if (originalDraggable) {
-                    originalDraggable.remove(); 
-                }
-
-                // Update matches needed count
-                let matchesNeeded = parseInt(target.getAttribute('data-matches-needed'));
-                matchesNeeded--;
-                target.setAttribute('data-matches-needed', matchesNeeded);
-
-                if (matchesNeeded === 0) {
+                // Logic check for set completion
+                const matches = target.querySelectorAll('.match-card').length;
+                if (matches === 2) {
                     target.classList.add('complete');
                     matchesFoundInSet++;
-                    updateFeedback(`🥳 Completed ${targetNumber}! All creatures are home!`);
-                    checkSetCompletion();
-                } else {
-                    updateFeedback(`✅ Matched the ${droppedType} for ${targetNumber}! Keep going!`);
-                }
-
-            } else if (alreadyMatched) {
-                updateFeedback(`⚠️ The ${droppedType} for this number is already matched! Try another.`);
-            } else {
-                updateFeedback('❌ Incorrect match. Oops! Try a different den.');
-            }
-        }
-
-        // 5. GAME FLOW AND FEEDBACK
-
-        function updateFeedback(message) {
-            const feedbackElement = document.getElementById('feedback');
-            feedbackElement.textContent = message;
-        }
-
-        function checkSetCompletion() {
-            const requiredMatches = ALL_NUMBERS[currentSetIndex].length;
-            
-            if (matchesFoundInSet === requiredMatches) {
-                
-                completedSetNumber.textContent = currentSetIndex + 1;
-                
-                if (currentSetIndex < totalSets - 1) {
-                    // Not the final set (Set 1 complete, moving to Set 2)
-                    nextSetButton.style.display = 'block';
-                    nextSetNumber.textContent = currentSetIndex + 2;
-                    congratsOverlay.style.display = 'flex';
-                    document.getElementById('congrats-message').textContent = `You guided all the little creatures home in Set ${currentSetIndex + 1}! Ready for the next set?`;
-                } else {
-                    // Final set (Set 2 complete)
-                    nextSetButton.style.display = 'none';
-                    congratsOverlay.style.display = 'flex';
-                    document.getElementById('congrats-title').textContent = '🌟 MASTER OF NUMBERS 1 TO 10! 🌟';
-                    document.getElementById('congrats-message').textContent = 'You successfully mastered numbers 1 through 10! Great job!';
+                    if (matchesFoundInSet === 5) {
+                        showCongrats();
+                    }
                 }
             }
         }
 
-        function moveToNextSet() {
+        function showCongrats() {
+            const overlay = document.getElementById('congrats-overlay');
+            overlay.style.display = 'flex';
+            const btn = document.getElementById('next-set-button');
+            if (currentSetIndex === 1) {
+                document.getElementById('congrats-title').textContent = "🌟 You are a Math Master! 🌟";
+                btn.style.display = 'none';
+            }
+        }
+
+        document.getElementById('next-set-button').addEventListener('click', () => {
             currentSetIndex++;
-            if (currentSetIndex < totalSets) {
-                congratsOverlay.style.display = 'none';
-                setupGame(currentSetIndex);
-            }
-        }
-        
-        nextSetButton.addEventListener('click', moveToNextSet);
+            document.getElementById('congrats-overlay').style.display = 'none';
+            setupGame(currentSetIndex);
+        });
 
-        // Start the game!
-        document.addEventListener('DOMContentLoaded', () => setupGame(currentSetIndex));
+        setupGame(0);
     </script>
-
 </body>
 </html>
