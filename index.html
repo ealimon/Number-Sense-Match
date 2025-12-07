@@ -90,7 +90,6 @@
             align-items: center;
             justify-content: center;
             user-select: none;
-            /* Added this to prevent overflow */
             overflow: hidden; 
         }
 
@@ -100,36 +99,35 @@
 
         .card-ten-frame {
             background-color: #dc3545;
-            /* Removed padding here to maximize internal space */
             padding: 0; 
-            /* Ensure content fits the card */
             box-sizing: border-box; 
         }
 
         /* 10-FRAME VISUALIZATION CONTAINER (for 1 or 2 frames) */
         .ten-frame-container {
+            /* --- ADJUSTED FOR FIT --- */
             display: flex;
-            gap: 5px; /* Reduced gap between frames */
+            gap: 3px; /* Tighter gap between the two 10-frames */
             align-items: center;
-            /* Centering the container within the card */
             justify-content: center; 
-            /* Added margin for internal spacing within the card */
             margin: auto; 
-            padding: 10px 0; /* Add vertical padding */
+            padding: 5px 0; /* Reduced vertical padding */
         }
 
         .ten-frame-grid {
+            /* --- ADJUSTED FOR FIT --- */
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 3px; /* Reduced gap between dots */
-            width: 65px; /* Adjusted width */
-            height: 30px; /* Adjusted height */
+            gap: 2px; /* Tighter gap between dots in the grid */
+            width: 60px; /* Reduced width */
+            height: 28px; /* Reduced height */
         }
 
         .dot {
-            width: 6px; /* Reduced dot size */
-            height: 6px; /* Reduced dot size */
+            /* --- ADJUSTED FOR FIT --- */
+            width: 5px; /* Significantly reduced dot size */
+            height: 5px; /* Significantly reduced dot size */
             background-color: #6c757d; 
             border-radius: 50%;
             transition: background-color 0.3s;
@@ -159,7 +157,7 @@
             height: auto;
             padding: 0;
             font-weight: normal;
-            overflow: visible; /* Restore overflow for placed card */
+            overflow: visible;
         }
         
         .match-card .ten-frame-grid .dot.filled {
@@ -179,7 +177,7 @@
             color: #007bff;
         }
 
-        /* --- CONGRATULATIONS OVERLAY (New Feature) --- */
+        /* --- CONGRATULATIONS OVERLAY --- */
         #congrats-overlay {
             position: fixed;
             top: 0;
@@ -188,7 +186,7 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
             color: white;
-            display: none; /* Hidden by default */
+            display: none; 
             justify-content: center;
             align-items: center;
             z-index: 1000;
