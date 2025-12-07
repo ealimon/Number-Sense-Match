@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animal Number Match (1-10 Focus)</title>
+    <title>Animal Den Number Match (Numbers 1-10)</title>
     <style>
         body {
             font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -48,6 +48,7 @@
             border-radius: 12px;
             text-align: center;
             min-height: 250px;
+            transition: background-color 0.3s;
         }
 
         .match-target.drag-over {
@@ -82,7 +83,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden; /* This stops dots from going outside */
+            overflow: hidden;
         }
         
         .card-word {
@@ -96,7 +97,6 @@
             border: 3px solid #4682b4;
         }
         
-        /* 10-FRAME STYLING */
         .ten-frame-container {
             display: flex;
             flex-direction: column;
@@ -110,7 +110,6 @@
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
             gap: 6px;
-            /* Explicitly sized to keep dots inside the blue card */
             width: 110px; 
             height: 45px;
             background-color: rgba(255, 255, 255, 0.3);
@@ -146,7 +145,11 @@
             border: none;
         }
 
-        /* --- OVERLAYS --- */
+        .match-target.complete {
+            background-color: #d4edda;
+            border: 5px solid #2e8b57;
+        }
+
         #congrats-overlay {
             position: fixed;
             top: 0;
@@ -166,6 +169,7 @@
             border-radius: 25px;
             text-align: center;
             border: 8px dashed #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         #next-set-button {
@@ -176,6 +180,7 @@
             border: 5px solid #fff;
             border-radius: 10px;
             cursor: pointer;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -185,13 +190,13 @@
         <h1>🐻 Animal Den Number Match (Numbers 1-10) 🦋</h1>
         <div id="target-area"></div>
         <div id="draggable-area"></div>
-        <div id="feedback"></div>
+        <div id="feedback" style="text-align:center; margin-top:10px; color:#ff69b4; font-weight:bold;"></div>
     </div>
 
     <div id="congrats-overlay">
         <div id="congrats-box">
             <h2 id="congrats-title">🎉 Wild Success! 🎉</h2>
-            <p id="congrats-message">Next set ready?</p>
+            <p id="congrats-message">Ready for the next set?</p>
             <button id="next-set-button">Start Next Set</button>
         </div>
     </div>
@@ -211,7 +216,6 @@
             for (let i = 1; i <= 10; i++) {
                 dotsHTML += `<span class="dot ${i <= number ? 'filled' : ''}"></span>`;
             }
-            // For 1-10 focus, we only ever need one grid per card
             return `<div class="ten-frame-container"><div class="ten-frame-grid">${dotsHTML}</div></div>`; 
         }
 
@@ -229,6 +233,7 @@
             matchesFoundInSet = 0;
             targetArea.innerHTML = '';
             draggableArea.innerHTML = '';
+            document.getElementById('feedback').textContent = '';
 
             const allDraggables = [];
 
@@ -260,7 +265,6 @@
                 card.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('card-id', card.id);
                     e.dataTransfer.setData('num', card.dataset.number);
-                    e.dataTransfer.setData('type', card.dataset.type);
                 });
                 draggableArea.appendChild(card);
             });
@@ -272,35 +276,38 @@
             const droppedNum = e.dataTransfer.getData('num');
             const targetNum = target.dataset.number;
             const cardId = e.dataTransfer.getData('card-id');
-            const cardType = e.dataTransfer.getData('type');
 
             target.classList.remove('drag-over');
             
             if (droppedNum === targetNum) {
-                const matchedCard = document.createElement('div');
-                matchedCard.className = 'match-card';
-                matchedCard.innerHTML = document.getElementById(cardId).innerHTML;
-                target.appendChild(matchedCard);
-                document.getElementById(cardId).remove();
+                const sourceCard = document.getElementById(cardId);
+                const matchedCardDisplay = document.createElement('div');
+                matchedCardDisplay.className = 'match-card';
+                matchedCardDisplay.innerHTML = sourceCard.innerHTML;
+                target.appendChild(matchedCardDisplay);
+                sourceCard.remove();
 
-                // Logic check for set completion
-                const matches = target.querySelectorAll('.match-card').length;
-                if (matches === 2) {
+                const matchesInDen = target.querySelectorAll('.match-card').length;
+                if (matchesInDen === 2) {
                     target.classList.add('complete');
                     matchesFoundInSet++;
                     if (matchesFoundInSet === 5) {
                         showCongrats();
                     }
                 }
+            } else {
+                document.getElementById('feedback').textContent = "Oops! Try another den.";
             }
         }
 
         function showCongrats() {
             const overlay = document.getElementById('congrats-overlay');
-            overlay.style.display = 'flex';
             const btn = document.getElementById('next-set-button');
+            overlay.style.display = 'flex';
+            
             if (currentSetIndex === 1) {
                 document.getElementById('congrats-title').textContent = "🌟 You are a Math Master! 🌟";
+                document.getElementById('congrats-message').textContent = "You mastered numbers 1 through 10!";
                 btn.style.display = 'none';
             }
         }
