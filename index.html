@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Sense Match Game (1, 5, 10, 15, 20)</title>
+    <title>Number Sense Match Game (Staged 1-20)</title>
     <style>
-        /* --- CSS STYLING --- */
+        /* --- CORE CSS STYLING (Same as before, plus new modal styles) --- */
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
             background-color: #f0f8ff;
             color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         h1 {
@@ -19,8 +24,8 @@
         }
 
         #game-container {
-            max-width: 1200px; /* Increased width to accommodate 5 targets */
-            margin: 0 auto;
+            max-width: 1200px;
+            width: 100%;
             padding: 20px;
             background-color: white;
             border-radius: 10px;
@@ -37,7 +42,7 @@
         }
 
         .match-target {
-            width: 180px; /* Slightly wider targets */
+            width: 180px;
             padding: 10px;
             background-color: #e9ecef;
             border: 3px dashed #6c757d;
@@ -66,6 +71,7 @@
             justify-content: center;
             gap: 15px;
             padding: 20px 0;
+            min-height: 200px;
         }
 
         .draggable-card {
@@ -78,7 +84,7 @@
             transition: opacity 0.3s, transform 0.1s;
             font-size: 1.2em;
             font-weight: bold;
-            width: 150px; /* Increased card size to fit two 10-frames */
+            width: 150px;
             height: 150px;
             display: flex;
             align-items: center;
@@ -107,23 +113,23 @@
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
             gap: 4px;
-            width: 70px; /* Adjusted size for two frames to fit */
+            width: 70px;
             height: 35px;
         }
 
         .dot {
             width: 8px;
             height: 8px;
-            background-color: #6c757d; /* Empty dot color */
+            background-color: #6c757d; 
             border-radius: 50%;
             transition: background-color 0.3s;
         }
 
         .dot.filled {
-            background-color: white; /* Filled dot color */
+            background-color: white; 
         }
 
-        /* FEEDBACK AND COMPLETED MATCHES */
+        /* Matched Card Styling */
         .match-card {
             border: 2px solid #28a745;
             background-color: #e2f0d9;
@@ -146,7 +152,7 @@
         }
         
         .match-card .ten-frame-grid .dot.filled {
-            background-color: #28a745; /* Green dots for matched frames */
+            background-color: #28a745; 
         }
 
         .match-target.complete {
@@ -161,13 +167,70 @@
             font-weight: bold;
             color: #007bff;
         }
-        
+
+        /* --- CONGRATULATIONS OVERLAY (New Feature) --- */
+        #congrats-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #congrats-box {
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #1dd1a1);
+            padding: 50px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: bounce 0.8s ease-out;
+        }
+
+        #congrats-title {
+            font-size: 4em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0 #333;
+        }
+
+        #congrats-message {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+
+        #next-set-button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #next-set-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Simple Bounce Animation */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-30px);}
+            60% {transform: translateY(-15px);}
+        }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <h1>🔢 Number Sense Match (1, 5, 10, 15, 20)</h1>
+        <h1>🔢 Number Sense Match (Set <span id="current-set-display">1</span> of 4)</h1>
         <p style="text-align: center;">Drag the **Number Words** and **10-Frames** to their matching **Numeral** box.</p>
 
         <div id="target-area">
@@ -179,22 +242,44 @@
         <div id="feedback"></div>
     </div>
 
+    <div id="congrats-overlay">
+        <div id="congrats-box">
+            <div id="confetti-effect"></div>
+            <div id="congrats-title">🎉 Congratulations! 🎉</div>
+            <div id="congrats-message">You completed Set <span id="completed-set-number">1</span>! Ready for the next challenge?</div>
+            <button id="next-set-button">Start Set <span id="next-set-number">2</span></button>
+        </div>
+    </div>
+
     <script>
         // --- JAVASCRIPT LOGIC ---
 
-        // 1. DATA DEFINITION - Increments of 5 up to 20
-        const NUMBERS = [
-            { num: 1, word: "One" },
-            { num: 5, word: "Five" },
-            { num: 10, word: "Ten" },
-            { num: 15, word: "Fifteen" },
-            { num: 20, word: "Twenty" }
+        // 1. DATA DEFINITION - 4 Sets of 5 numbers (1-5, 6-10, 11-15, 16-20)
+        const ALL_NUMBERS = [
+            // Set 1: 1-5
+            [{ num: 1, word: "One" }, { num: 2, word: "Two" }, { num: 3, word: "Three" }, { num: 4, word: "Four" }, { num: 5, word: "Five" }],
+            // Set 2: 6-10
+            [{ num: 6, word: "Six" }, { num: 7, word: "Seven" }, { num: 8, word: "Eight" }, { num: 9, word: "Nine" }, { num: 10, word: "Ten" }],
+            // Set 3: 11-15
+            [{ num: 11, word: "Eleven" }, { num: 12, word: "Twelve" }, { num: 13, word: "Thirteen" }, { num: 14, word: "Fourteen" }, { num: 15, word: "Fifteen" }],
+            // Set 4: 16-20
+            [{ num: 16, word: "Sixteen" }, { num: 17, word: "Seventeen" }, { num: 18, word: "Eighteen" }, { num: 19, word: "Nineteen" }, { num: 20, word: "Twenty" }]
         ];
 
-        // Global state tracking
-        let matchesFound = 0;
-        const totalMatches = NUMBERS.length;
-        let cardCounter = 0; // Used to assign unique IDs
+        // Global State
+        let currentSetIndex = 0; // Starts at 0 (Set 1)
+        let matchesFoundInSet = 0;
+        let cardCounter = 0; 
+        const totalSets = ALL_NUMBERS.length;
+        
+        const targetArea = document.getElementById('target-area');
+        const draggableArea = document.getElementById('draggable-area');
+        const congratsOverlay = document.getElementById('congrats-overlay');
+        const nextSetButton = document.getElementById('next-set-button');
+        const currentSetDisplay = document.getElementById('current-set-display');
+        const completedSetNumber = document.getElementById('completed-set-number');
+        const nextSetNumber = document.getElementById('next-set-number');
+
 
         // 2. HELPER FUNCTION: Create 10-Frame HTML (supports 0-20 using two frames)
         function createTenFrameHTML(number) {
@@ -202,7 +287,6 @@
             const ones = number % 10;
             let html = '';
 
-            // Helper to generate a single 10-frame
             function generateSingleFrame(filledCount) {
                 let dotsHTML = '';
                 for (let i = 1; i <= 10; i++) {
@@ -212,76 +296,24 @@
                 return `<div class="ten-frame-grid">${dotsHTML}</div>`;
             }
             
-            // Add a full 10-frame for every ten (up to 1)
             for (let i = 0; i < fullTens; i++) {
                 html += generateSingleFrame(10);
             }
             
-            // Add the partial frame for the ones
-            if (ones > 0 || fullTens === 0) { // Ensures a frame is shown even for 10/20 (empty ones frame)
+            if (ones > 0 || fullTens === 0) { 
                 html += generateSingleFrame(ones);
             }
 
+            // For numbers 10 and 20, ensure both frames show if needed for context
+            if (number > 10 && ones === 0) {
+                 html += generateSingleFrame(0);
+            }
+            if (number === 10) {
+                 html += generateSingleFrame(0);
+            }
+
+
             return `<div class="ten-frame-container">${html}</div>`; 
-        }
-
-        // 3. GAME SETUP
-        function setupGame() {
-            const targetArea = document.getElementById('target-area');
-            const draggableArea = document.getElementById('draggable-area');
-            const allDraggables = [];
-
-            // A. Create TARGETS (Numerals)
-            NUMBERS.forEach(data => {
-                const target = document.createElement('div');
-                target.className = 'match-target';
-                target.setAttribute('data-number', data.num);
-                target.setAttribute('data-matches-needed', 2); // Need 2 matches: word and 10-frame
-                target.innerHTML = `<div class="target-numeral">${data.num}</div>`;
-
-                // Add Drag/Drop Listeners to the TARGET
-                target.addEventListener('dragover', handleDragOver);
-                target.addEventListener('dragleave', handleDragLeave);
-                target.addEventListener('drop', handleDrop);
-
-                targetArea.appendChild(target);
-
-                // B. Prepare DRAGGABLES (Words and 10-Frames)
-                // Number Word Card
-                allDraggables.push({
-                    type: 'word',
-                    num: data.num,
-                    html: data.word,
-                    class: 'card-word'
-                });
-
-                // 10-Frame Card
-                allDraggables.push({
-                    type: 'ten-frame',
-                    num: data.num,
-                    html: createTenFrameHTML(data.num),
-                    class: 'card-ten-frame'
-                });
-            });
-
-            // C. Shuffle and Render Draggables
-            shuffleArray(allDraggables);
-            
-            allDraggables.forEach(item => {
-                cardCounter++;
-                const card = document.createElement('div');
-                card.id = `card-${cardCounter}`; // Assign a unique ID
-                card.className = `draggable-card ${item.class}`;
-                card.setAttribute('data-number', item.num);
-                card.setAttribute('data-type', item.type);
-                card.setAttribute('draggable', true);
-                card.innerHTML = item.html;
-
-                // Add Drag Listener to the CARD
-                card.addEventListener('dragstart', handleDragStart);
-
-                draggableArea.appendChild(card);
-            });
         }
 
         // Simple Fisher-Yates shuffle algorithm
@@ -292,17 +324,69 @@
             }
         }
 
-        // 4. DRAG AND DROP HANDLERS
+        // 3. GAME SETUP
+        function setupGame(setIndex) {
+            const currentSetData = ALL_NUMBERS[setIndex];
+            const totalMatchesNeeded = currentSetData.length * 2; // 5 numbers * 2 cards each
+            matchesFoundInSet = 0;
 
-        // Drag Start: Set the data being dragged
+            // Clear previous elements
+            targetArea.innerHTML = '';
+            draggableArea.innerHTML = '';
+            updateFeedback('');
+            
+            currentSetDisplay.textContent = setIndex + 1; // Update header display
+
+            const allDraggables = [];
+
+            // A. Create TARGETS (Numerals)
+            currentSetData.forEach(data => {
+                const target = document.createElement('div');
+                target.className = 'match-target';
+                target.setAttribute('data-number', data.num);
+                target.setAttribute('data-matches-needed', 2); 
+                target.innerHTML = `<div class="target-numeral">${data.num}</div>`;
+
+                target.addEventListener('dragover', handleDragOver);
+                target.addEventListener('dragleave', handleDragLeave);
+                target.addEventListener('drop', handleDrop);
+
+                targetArea.appendChild(target);
+
+                // B. Prepare DRAGGABLES (Words and 10-Frames)
+                allDraggables.push({ type: 'word', num: data.num, html: data.word, class: 'card-word' });
+                allDraggables.push({ type: 'ten-frame', num: data.num, html: createTenFrameHTML(data.num), class: 'card-ten-frame' });
+            });
+
+            // C. Shuffle and Render Draggables
+            shuffleArray(allDraggables);
+            
+            allDraggables.forEach(item => {
+                cardCounter++;
+                const card = document.createElement('div');
+                card.id = `card-${cardCounter}`; 
+                card.className = `draggable-card ${item.class}`;
+                card.setAttribute('data-number', item.num);
+                card.setAttribute('data-type', item.type);
+                card.setAttribute('draggable', true);
+                card.innerHTML = item.html;
+
+                card.addEventListener('dragstart', handleDragStart);
+
+                draggableArea.appendChild(card);
+            });
+        }
+
+
+        // 4. DRAG AND DROP HANDLERS (Simplified for brevity, keeping only essential functions)
+
         function handleDragStart(e) {
             e.dataTransfer.setData('text/plain', e.target.outerHTML);
             e.dataTransfer.setData('data-number', e.target.getAttribute('data-number'));
             e.dataTransfer.setData('data-type', e.target.getAttribute('data-type'));
-            e.dataTransfer.setData('card-id', e.target.id); // Pass the ID
+            e.dataTransfer.setData('card-id', e.target.id); 
         }
 
-        // Drag Over: Allow dropping
         function handleDragOver(e) {
             e.preventDefault(); 
             const target = e.target.closest('.match-target');
@@ -311,7 +395,6 @@
             }
         }
 
-        // Drag Leave: Remove hover style
         function handleDragLeave(e) {
             const target = e.target.closest('.match-target');
             if (target) {
@@ -319,7 +402,6 @@
             }
         }
 
-        // Drop: Check for a match and update the board
         function handleDrop(e) {
             e.preventDefault();
             const target = e.target.closest('.match-target');
@@ -341,12 +423,10 @@
                 tempDiv.innerHTML = cardHTML;
                 const droppedCard = tempDiv.firstChild;
                 
-                // 1. Create the display element for the matched card inside the target
                 const matchDisplay = document.createElement('div');
                 matchDisplay.className = 'match-card';
                 matchDisplay.setAttribute('data-matched-type', droppedType);
                 
-                // Remove the draggable attributes/classes from the displayed card
                 droppedCard.removeAttribute('draggable');
                 droppedCard.removeAttribute('id');
                 droppedCard.className = droppedCard.className.replace('draggable-card', '').trim();
@@ -354,23 +434,22 @@
                 matchDisplay.appendChild(droppedCard);
                 target.appendChild(matchDisplay);
 
-                // 2. REMOVE THE ORIGINAL DRAGGABLE CARD
+                // REMOVE THE ORIGINAL DRAGGABLE CARD
                 const originalDraggable = document.getElementById(droppedCardId);
                 if (originalDraggable) {
                     originalDraggable.remove(); 
                 }
 
-                // 3. Update matches needed count
+                // Update matches needed count
                 let matchesNeeded = parseInt(target.getAttribute('data-matches-needed'));
                 matchesNeeded--;
                 target.setAttribute('data-matches-needed', matchesNeeded);
 
                 if (matchesNeeded === 0) {
-                    // ALL MATCHES COMPLETE for this number!
                     target.classList.add('complete');
-                    matchesFound++;
-                    updateFeedback(`🥳 You completed the number ${targetNumber}!`);
-                    checkWinCondition();
+                    matchesFoundInSet++;
+                    updateFeedback(`🥳 Completed ${targetNumber}!`);
+                    checkSetCompletion();
                 } else {
                     updateFeedback(`✅ Matched the ${droppedType} for ${targetNumber}!`);
                 }
@@ -378,25 +457,56 @@
             } else if (alreadyMatched) {
                 updateFeedback(`⚠️ The ${droppedType} for this number is already matched! Try another.`);
             } else {
-                // FAILED MATCH
                 updateFeedback('❌ Incorrect match. Try again!');
             }
         }
 
-        // 5. GAME FEEDBACK & WIN CONDITION
+        // 5. GAME FLOW AND FEEDBACK
+
         function updateFeedback(message) {
             const feedbackElement = document.getElementById('feedback');
             feedbackElement.textContent = message;
         }
 
-        function checkWinCondition() {
-            if (matchesFound === totalMatches) {
-                updateFeedback('🎉 CONGRATULATIONS! You matched all the numbers!');
+        function checkSetCompletion() {
+            // Check if all 5 numbers in the current set have 2 matches (10 matches total)
+            const requiredMatches = ALL_NUMBERS[currentSetIndex].length;
+            
+            if (matchesFoundInSet === requiredMatches) {
+                
+                // Set is finished! Show the Congratulations screen.
+                completedSetNumber.textContent = currentSetIndex + 1;
+                
+                if (currentSetIndex < totalSets - 1) {
+                    // Not the final set
+                    nextSetButton.style.display = 'block';
+                    nextSetNumber.textContent = currentSetIndex + 2;
+                    congratsOverlay.style.display = 'flex';
+                    document.getElementById('congrats-message').textContent = `You completed Set ${currentSetIndex + 1}! Ready for the next challenge?`;
+                } else {
+                    // Final set completed
+                    nextSetButton.style.display = 'none';
+                    congratsOverlay.style.display = 'flex';
+                    document.getElementById('congrats-title').textContent = '🏆 Game Complete! 🏆';
+                    document.getElementById('congrats-message').textContent = 'You mastered numbers 1 through 20!';
+                }
             }
         }
 
+        function moveToNextSet() {
+            currentSetIndex++;
+            if (currentSetIndex < totalSets) {
+                congratsOverlay.style.display = 'none';
+                setupGame(currentSetIndex);
+            }
+            // The final game complete screen is handled within checkSetCompletion
+        }
+        
+        // Listeners for the game flow buttons
+        nextSetButton.addEventListener('click', moveToNextSet);
+
         // Start the game!
-        document.addEventListener('DOMContentLoaded', setupGame);
+        document.addEventListener('DOMContentLoaded', () => setupGame(currentSetIndex));
     </script>
 
 </body>
