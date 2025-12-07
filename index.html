@@ -90,6 +90,8 @@
             align-items: center;
             justify-content: center;
             user-select: none;
+            /* Added this to prevent overflow */
+            overflow: hidden; 
         }
 
         .card-word {
@@ -98,28 +100,36 @@
 
         .card-ten-frame {
             background-color: #dc3545;
-            padding: 5px;
+            /* Removed padding here to maximize internal space */
+            padding: 0; 
+            /* Ensure content fits the card */
+            box-sizing: border-box; 
         }
 
         /* 10-FRAME VISUALIZATION CONTAINER (for 1 or 2 frames) */
         .ten-frame-container {
             display: flex;
-            gap: 10px;
+            gap: 5px; /* Reduced gap between frames */
             align-items: center;
+            /* Centering the container within the card */
+            justify-content: center; 
+            /* Added margin for internal spacing within the card */
+            margin: auto; 
+            padding: 10px 0; /* Add vertical padding */
         }
 
         .ten-frame-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 4px;
-            width: 70px;
-            height: 35px;
+            gap: 3px; /* Reduced gap between dots */
+            width: 65px; /* Adjusted width */
+            height: 30px; /* Adjusted height */
         }
 
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 6px; /* Reduced dot size */
+            height: 6px; /* Reduced dot size */
             background-color: #6c757d; 
             border-radius: 50%;
             transition: background-color 0.3s;
@@ -149,6 +159,7 @@
             height: auto;
             padding: 0;
             font-weight: normal;
+            overflow: visible; /* Restore overflow for placed card */
         }
         
         .match-card .ten-frame-grid .dot.filled {
