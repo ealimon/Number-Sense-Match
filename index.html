@@ -131,6 +131,21 @@
             border-radius: 4px;
             font-size: 0.9em;
         }
+        
+        /* Ensure the content inside the match card displays correctly */
+        .match-card .draggable-card {
+            cursor: default; /* Disable grab icon inside the target */
+            background-color: transparent;
+            color: #333;
+            box-shadow: none;
+            width: auto;
+            height: auto;
+            padding: 0;
+        }
+        
+        .match-card .ten-frame-grid .dot.filled {
+            background-color: #28a745; /* Green dots for matched frames */
+        }
 
         .match-target.complete {
             background-color: #d4edda;
@@ -157,6 +172,7 @@
     <div id="game-container">
         <h1>🔢 Number Sense Match (1-5)</h1>
         <p style="text-align: center;">Drag the **Number Words** and **10-Frames** to their matching **Numeral** box.</p>
+        
 
         <div id="target-area">
             </div>
@@ -182,11 +198,12 @@
         // Global state tracking
         let matchesFound = 0;
         const totalMatches = NUMBERS.length;
+        let cardCounter = 0; // Used to assign unique IDs
 
         // 2. HELPER FUNCTION: Create a 10-Frame HTML element
         function createTenFrameHTML(number) {
             let dotsHTML = '';
-            // Generate 10 dots (5 on top row, 5 on bottom row)
+            // Generate 10 dots
             for (let i = 1; i <= 10; i++) {
                 const isFilled = i <= number;
                 dotsHTML += `<span class="dot ${isFilled ? 'filled' : ''}"></span>`;
@@ -237,7 +254,9 @@
             shuffleArray(allDraggables);
             
             allDraggables.forEach(item => {
+                cardCounter++;
                 const card = document.createElement('div');
+                card.id = `card-${cardCounter}`; // Assign a unique ID
                 card.className = `draggable-card ${item.class}`;
                 card.setAttribute('data-number', item.num);
                 card.setAttribute('data-type', item.type);
@@ -266,21 +285,25 @@
             e.dataTransfer.setData('text/plain', e.target.outerHTML);
             e.dataTransfer.setData('data-number', e.target.getAttribute('data-number'));
             e.dataTransfer.setData('data-type', e.target.getAttribute('data-type'));
-            e.target.classList.add('dragging');
+            e.dataTransfer.setData('card-id', e.target.id); // Pass the ID
+            //e.target.classList.add('dragging'); // Optional styling
         }
 
         // Drag Over: Allow dropping
         function handleDragOver(e) {
             e.preventDefault(); // Required to allow drop
-            if (e.target.classList.contains('match-target')) {
-                e.target.classList.add('drag-over');
+            // Find the closest target element, in case the drop is over nested content
+            const target = e.target.closest('.match-target');
+            if (target) {
+                target.classList.add('drag-over');
             }
         }
 
         // Drag Leave: Remove hover style
         function handleDragLeave(e) {
-            if (e.target.classList.contains('match-target')) {
-                e.target.classList.remove('drag-over');
+            const target = e.target.closest('.match-target');
+            if (target) {
+                target.classList.remove('drag-over');
             }
         }
 
@@ -295,6 +318,7 @@
             const droppedNumber = e.dataTransfer.getData('data-number');
             const targetNumber = target.getAttribute('data-number');
             const droppedType = e.dataTransfer.getData('data-type');
+            const droppedCardId = e.dataTransfer.getData('card-id'); // Retrieve the ID
             
             // Check if this type of match has already been made for this target
             const alreadyMatched = target.querySelector(`[data-matched-type="${droppedType}"]`);
@@ -306,21 +330,26 @@
                 tempDiv.innerHTML = cardHTML;
                 const droppedCard = tempDiv.firstChild;
                 
-                // Create the display element for the matched card
+                // 1. Create the display element for the matched card inside the target
                 const matchDisplay = document.createElement('div');
                 matchDisplay.className = 'match-card';
                 matchDisplay.setAttribute('data-matched-type', droppedType);
-                matchDisplay.appendChild(droppedCard.cloneNode(true));
                 
+                // Remove the draggable attributes/classes from the displayed card
+                droppedCard.removeAttribute('draggable');
+                droppedCard.removeAttribute('id');
+                droppedCard.className = droppedCard.className.replace('draggable-card', '').trim();
+
+                matchDisplay.appendChild(droppedCard);
                 target.appendChild(matchDisplay);
 
-                // Remove the original draggable card from the board
-                const originalDraggable = document.querySelector(`.draggable-card[data-number="${droppedNumber}"][data-type="${droppedType}"]`);
+                // 2. REMOVE THE ORIGINAL DRAGGABLE CARD
+                const originalDraggable = document.getElementById(droppedCardId);
                 if (originalDraggable) {
-                    originalDraggable.classList.add('hidden');
+                    originalDraggable.remove(); 
                 }
 
-                // Update matches needed count
+                // 3. Update matches needed count
                 let matchesNeeded = parseInt(target.getAttribute('data-matches-needed'));
                 matchesNeeded--;
                 target.setAttribute('data-matches-needed', matchesNeeded);
